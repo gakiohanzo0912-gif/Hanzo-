@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>犬の歯みがきチャレンジ</title>
+  <link rel="icon" href="assets/icon.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <h1>犬の歯みがきチャレンジ</h1>
+        <p class="subtitle">口が開いてる間だけみがけ。閉じたまま続けると噛まれる。</p>
+      </div>
+      <button id="muteButton" class="ghost" aria-pressed="false">🔊 サウンド ON</button>
+    </header>
+
+    <main class="layout">
+      <section class="game-panel">
+        <div class="hud">
+          <div class="hud-block">
+            <span class="label">ステージ</span>
+            <strong id="stageText">1 / 3</strong>
+          </div>
+          <div class="hud-block">
+            <span class="label">残り時間</span>
+            <strong id="timeText">30.0</strong>
+          </div>
+          <div class="hud-block lives-wrap">
+            <span class="label">ダメージ</span>
+            <div id="lives" class="lives"></div>
+          </div>
+        </div>
+
+        <div class="meter-wrap">
+          <div class="meter-label-row">
+            <span>歯みがきゲージ</span>
+            <span id="progressText">0%</span>
+          </div>
+          <div class="meter"><div id="progressBar" class="meter-fill"></div></div>
+        </div>
+
+        <div id="gameArea" class="game-area">
+          <img id="dogImage" class="dog-image" src="assets/dog-open.png" alt="犬" draggable="false" />
+          <div id="mouthZone" class="mouth-zone" aria-hidden="true"></div>
+          <img id="plaque" class="plaque" src="assets/plaque.svg" alt="" draggable="false" />
+          <img id="brush" class="brush" src="assets/toothbrush.svg" alt="歯ブラシ" draggable="false" />
+          <div id="stateBadge" class="state-badge open">OPEN</div>
+          <div id="fxText" class="fx-text"></div>
+          <div id="overlay" class="overlay show">
+            <div class="overlay-card">
+              <h2>遊び方</h2>
+              <p>ドラッグ or 指で歯ブラシを動かして、口の位置で押し続けて歯みがき。</p>
+              <p>犬が <strong>OPEN</strong> の時だけ安全。<strong>CLOSED</strong> なのに続けると噛まれてダメージ。</p>
+              <p>3回ダメージでゲームオーバー。3ステージクリアで勝利。</p>
+              <div class="controls">
+                <button id="startButton" class="primary">スタート</button>
+              </div>
+              <p class="mini">PC: マウス長押し / Space　　スマホ: 長押し</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side-panel">
+        <div class="card">
+          <h2>ルール</h2>
+          <ul>
+            <li>口が開いた時だけ歯みがき成功</li>
+            <li>閉じたまま磨くと1ダメージ</li>
+            <li>各ステージでゲージ100%にすると次へ</li>
+            <li>ステージが進むと噛む速度が上がる</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h2>GitHubに置くとき</h2>
+          <p>そのまま静的サイトで動きます。<code>index.html</code> を開くだけでもOKです。</p>
+          <p>GitHub Pages でも配布できます。</p>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
