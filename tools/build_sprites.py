@@ -204,7 +204,8 @@ def build(name):
     if name == "niece":
         layout = {
             "down": {"frames": [F(0, 0), F(0, 2), mirror(F(0, 2))], "walk": cycle, "bob": [0, 0, 0, 0]},
-            "left": {"frames": [F(1, 0), F(1, 1), F(1, 2)], "walk": cycle, "bob": [0, 0, 0, 0]},
+            # 元シートの左向きの行は、3コマ目が右向きになっていたので、右向きの行を反転して使う
+            "left": {"frames": [mirror(F(2, 0)), mirror(F(2, 1)), mirror(F(2, 2))], "walk": cycle, "bob": [0, 0, 0, 0]},
             "right": {"frames": [F(2, 0), F(2, 1), F(2, 2)], "walk": cycle, "bob": [0, 0, 0, 0]},
             "up": {"frames": [F(3, 0), F(3, 2)], "walk": flip2, "bob": [0, 1]},
         }

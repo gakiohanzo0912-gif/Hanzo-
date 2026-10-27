@@ -69,6 +69,10 @@
   window.addEventListener("keyup", function (e) {
     if (KEYS[e.key]) release("key-" + e.key.toLowerCase());
   });
+  // 長押し・ドラッグで文字や画像が選択されたり、メニューが出たりしないようにする
+  ["selectstart", "dragstart", "contextmenu"].forEach(function (ev) {
+    document.addEventListener(ev, function (e) { e.preventDefault(); });
+  });
   function clearInput() { held = []; }
   window.addEventListener("blur", clearInput);
   document.addEventListener("visibilitychange", clearInput);
