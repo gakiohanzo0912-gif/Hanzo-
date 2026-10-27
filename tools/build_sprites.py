@@ -44,7 +44,8 @@ SHEETS = {
 
 # ゲーム内の身長差に合わせた拡大率(分子, 分母)。元の絵の大きさがバラバラだったので、ここでそろえる。
 #   姪っ子(約79ドット)を基準に、パパ=大人、ママ=パパより少し低め、おじさん=ずんぐり。
-SCALE = {"niece": (1, 1), "dog": (1, 1), "uncle": (2, 1), "mama": (4, 3), "papa": (1, 1)}
+# (横の分子, 横の分母, 縦の分子, 縦の分母)。ママは横だけ細めにして、すらっと見せている。
+SCALE = {"niece": (1, 1, 1, 1), "dog": (1, 1, 1, 1), "uncle": (2, 1, 2, 1), "mama": (7, 8, 4, 3), "papa": (5, 6, 5, 6)}
 
 
 # ------------------------------------------------------------------ 読み込み・背景
@@ -249,13 +250,13 @@ def mirror(f):
     return f[:, ::-1].copy()
 
 
-def scale_nearest(f, num, den):
-    if (num, den) == (1, 1):
+def scale_nearest(f, xn, xd, yn, yd):
+    if (xn, xd, yn, yd) == (1, 1, 1, 1):
         return f
     h, w = f.shape[:2]
-    nh, nw = int(round(h * num / den)), int(round(w * num / den))
-    ys = np.minimum(h - 1, (np.arange(nh) * den) // num)
-    xs = np.minimum(w - 1, (np.arange(nw) * den) // num)
+    nh, nw = int(round(h * yn / yd)), int(round(w * xn / xd))
+    ys = np.minimum(h - 1, (np.arange(nh) * yd) // yn)
+    xs = np.minimum(w - 1, (np.arange(nw) * xd) // xn)
     return f[ys][:, xs]
 
 
@@ -361,9 +362,9 @@ def build(name):
     else:   # mama / papa: 立ち姿の1枚だけ
         layout = {"down": {"frames": [fr[0]], "walk": [0], "bob": [0]}}
         upper, erode = True, False
-    num, den = SCALE[name]
+    sx = SCALE[name]
     for d in layout.values():
-        d["frames"] = [scale_nearest(f, num, den) for f in d["frames"]]
+        d["frames"] = [scale_nearest(f, *sx) for f in d["frames"]]
     sheet, meta = assemble(layout, upper, erode)
     Image.fromarray(sheet, "RGBA").save(os.path.join(OUT, name + ".png"))
     print("%-6s セル %3dx%-3d  1コマの高さ %d" % (name, meta["cellW"], meta["cellH"], max(f.shape[0] for d in layout.values() for f in d["frames"])))
