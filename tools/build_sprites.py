@@ -36,16 +36,14 @@ SHEETS = {
                 pitch=lambda r: 4.90, span=0.18, color="fg"),
     "uncle": dict(file="uncle-sheet.jpg", kind="bands", rows=5, cols=3, thr=38, crop=(6, 6, None, None),
                   pitch=lambda r: 6.30, span=0.5, color="dark"),
-    "mama": dict(file="mama.jpg", kind="single", thr=38, crop=(6, 6, 1240, 1009),
-                 pitch=lambda r: (10.42, 11.9), span=1.2, color="dark", holes=True),
-    "papa": dict(file="papa.jpg", kind="single", thr=38, crop=(6, 4, 711, 1610),
-                 pitch=lambda r: (12.6, 12.6), span=0.8, color="dark", holes=False),
+    "mama": dict(file="mama2.jpg", kind="single", thr=38, pitch=lambda r: (8.5, 9.7), span=0.6, color="dark", holes=True),
+    "papa": dict(file="papa2.jpg", kind="single", thr=38, pitch=lambda r: (10.9, 10.5), span=0.6, color="dark", holes=False),
 }
 
 # ゲーム内の身長差に合わせた拡大率(分子, 分母)。元の絵の大きさがバラバラだったので、ここでそろえる。
 #   姪っ子(約79ドット)を基準に、パパ=大人、ママ=パパより少し低め、おじさん=ずんぐり。
-# (横の分子, 横の分母, 縦の分子, 縦の分母)。ママは横だけ細めにして、すらっと見せている。
-SCALE = {"niece": (1, 1, 1, 1), "dog": (1, 1, 1, 1), "uncle": (2, 1, 2, 1), "mama": (7, 8, 4, 3), "papa": (5, 6, 5, 6)}
+# (横の分子, 横の分母, 縦の分子, 縦の分母)
+SCALE = {"niece": (1, 1, 1, 1), "dog": (1, 1, 1, 1), "uncle": (2, 1, 2, 1), "mama": (9, 8, 9, 8), "papa": (4, 3, 4, 3)}
 
 
 # ------------------------------------------------------------------ 読み込み・背景

@@ -32,7 +32,7 @@
   var world = null, story = null;
   var ready = false, loadError = null;
 
-  Promise.all(KINDS.map(function (k) { return loadImage("assets/sprites/" + k + ".png?v=4"); }))
+  Promise.all(KINDS.map(function (k) { return loadImage("assets/sprites/" + k + ".png?v=5"); }))
     .then(function (imgs) {
       KINDS.forEach(function (k, i) { sprites[k] = imgs[i]; });
       world = new H.World(H.SCENES, "outside");
