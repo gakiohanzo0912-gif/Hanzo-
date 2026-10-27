@@ -32,7 +32,7 @@
   var world = null, story = null;
   var ready = false, loadError = null;
 
-  Promise.all(KINDS.map(function (k) { return loadImage("assets/sprites/" + k + ".png?v=6"); }))
+  Promise.all(KINDS.map(function (k) { return loadImage("assets/sprites/" + k + ".png?v=7"); }))
     .then(function (imgs) {
       KINDS.forEach(function (k, i) { sprites[k] = imgs[i]; });
       world = new H.World(H.SCENES, "room2");
@@ -204,7 +204,7 @@
   var SHADOW = { dog: 24, uncle: 20, niece: 15, mama: 15, papa: 15 };
 
   // 人・犬を1体描く(x, y は足もとのマス座標(小数))
-  function actor(kind, x, y, dir, walker, pose) {
+  function actor(kind, x, y, dir, walker, pose, step) {
     var meta = window.SPRITE_META[kind];
     var dm = meta.dirs[dir] || meta.dirs.down;
     var feetX = x * TILE + TILE / 2;
@@ -213,6 +213,9 @@
     if (pose && meta.extra && meta.extra[pose]) {
       row = meta.extra[pose].row;
       fi = [0, 1, 2, 1][Math.floor(anim * 1.4) % 4];
+    } else if (step) {   // その場で足ぶみ(ドラクエの村人のように)
+      var sl = dm.walk.length;
+      fi = dm.walk[Math.floor(anim * 3.5) % sl];
     } else if (walker && walker.moving) {
       var len = dm.walk.length;
       var k = walker.steps * 2 + (walker.t >= 0.5 ? 1 : 0);
@@ -416,7 +419,7 @@
       if (o.x + o.img.width < camX || o.x > camX + VIEW_W || o.y + o.img.height < camY || o.y > camY + VIEW_H) continue;
       list.push(o);
     }
-    world.npcs.forEach(function (n) { list.push(actor(n.kind, n.x, n.y, n.dir, null, n.pose)); });
+    world.npcs.forEach(function (n) { list.push(actor(n.kind, n.x, n.y, n.dir, null, n.pose, n.step)); });
     world.followers.forEach(function (f) { list.push(actor(f.kind, f.pos().x, f.pos().y, f.dir, f)); });
     list.push(actor("niece", p.x, p.y, world.player.dir, world.player));
     list.sort(function (a, b) { return a.sortY - b.sortY; });

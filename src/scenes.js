@@ -86,8 +86,8 @@
         "10,2": { to: "room2", x: 10, y: 3, dir: "down" },
       },
       npcs: [
-        { id: "mama", kind: "mama", x: 5, y: 3, dir: "up" },      // 台所でごはん作り
-        { id: "papa", kind: "papa", x: 2, y: 3, dir: "up" },      // 本だなをながめている
+        { id: "mama", kind: "mama", x: 5, y: 3, dir: "up", step: true },      // 台所でごはん作り
+        { id: "papa", kind: "papa", x: 2, y: 3, dir: "up", step: true },      // 本だなをながめている
       ],
       talk: {
         S: ["ほんが ぎっしり ならんでいる。", "『まめしばの そだてかた』…ある。"],

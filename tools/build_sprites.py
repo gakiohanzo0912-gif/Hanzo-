@@ -379,8 +379,9 @@ def build(name):
         W = [1, 2, 3, 2]
         layout = {
             "down": {"frames": [F(0, c) for c in range(4)], "walk": W, "bob": [0, 0, 0, 0]},
-            "left": {"frames": [F(1, c) for c in range(4)], "walk": W, "bob": [0, 0, 0, 0]},
-            "right": {"frames": [F(2, c) for c in range(4)], "walk": W, "bob": [0, 0, 0, 0]},
+            # 横向きは本人に似ていないので、左右を向いたときも正面の絵を使う(ドラクエの村人と同じ)
+            "left": {"frames": [F(0, c) for c in range(4)], "walk": W, "bob": [0, 0, 0, 0]},
+            "right": {"frames": [F(0, c) for c in range(4)], "walk": W, "bob": [0, 0, 0, 0]},
             "up": {"frames": [F(3, c) for c in range(4)], "walk": W, "bob": [0, 0, 0, 0]},
         }
         upper, erode = True, False
@@ -388,8 +389,8 @@ def build(name):
         W = [1, 2, 3, 4]
         layout = {
             "down": {"frames": [F(0, c) for c in range(5)], "walk": W, "bob": [0, 0, 0, 0]},
-            "left": {"frames": [mirror(F(1, c)) for c in range(5)], "walk": W, "bob": [0, 0, 0, 0]},
-            "right": {"frames": [F(2, c) for c in range(5)], "walk": W, "bob": [0, 0, 0, 0]},
+            "left": {"frames": [F(0, c) for c in range(5)], "walk": W, "bob": [0, 0, 0, 0]},
+            "right": {"frames": [F(0, c) for c in range(5)], "walk": W, "bob": [0, 0, 0, 0]},
             "up": {"frames": [F(3, c) for c in range(5)], "walk": W, "bob": [0, 0, 0, 0]},
         }
         upper, erode = True, False
