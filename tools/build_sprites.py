@@ -36,14 +36,16 @@ SHEETS = {
                 pitch=lambda r: 4.90, span=0.18, color="fg"),
     "uncle": dict(file="uncle-sheet.jpg", kind="bands", rows=5, cols=3, thr=38, crop=(6, 6, None, None),
                   pitch=lambda r: 6.30, span=0.5, color="dark"),
-    "mama": dict(file="mama2.jpg", kind="single", thr=38, pitch=lambda r: (8.5, 9.7), span=0.6, color="dark", holes=True),
-    "papa": dict(file="papa2.jpg", kind="single", thr=38, pitch=lambda r: (10.9, 10.5), span=0.6, color="dark", holes=False),
+    "mama": dict(file="mama-sheet.jpg", kind="grid", rows=4, cols=5, thr=38,
+                 pitch=lambda r: 4.0, span=0.3, color="fg", holes=True, clean=True),
+    "papa": dict(file="papa-sheet.jpg", kind="grid", rows=4, cols=4, thr=38,
+                 pitch=lambda r: 4.0, span=0.3, color="fg", holes=False, clean=True),
 }
 
 # ゲーム内の身長差に合わせた拡大率(分子, 分母)。元の絵の大きさがバラバラだったので、ここでそろえる。
 #   姪っ子(約79ドット)を基準に、パパ=大人、ママ=パパより少し低め、おじさん=ずんぐり。
 # (横の分子, 横の分母, 縦の分子, 縦の分母)
-SCALE = {"niece": (1, 1, 1, 1), "dog": (1, 1, 1, 1), "uncle": (2, 1, 2, 1), "mama": (9, 8, 9, 8), "papa": (4, 3, 4, 3)}
+SCALE = {"niece": (1, 1, 1, 1), "dog": (1, 1, 1, 1), "uncle": (2, 1, 2, 1), "mama": (2, 1, 2, 1), "papa": (2, 1, 2, 1)}
 
 
 # ------------------------------------------------------------------ 読み込み・背景
@@ -228,6 +230,19 @@ def trim(fr, min_size=6):
     return fr[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
 
 
+def drop_specks(fr, ratio=0.02):
+    """本体にくっついていない小さなゴミ(足もとの影の線など)を消す"""
+    al = fr[..., 3] > 0
+    lab, n = ndi.label(al, structure=np.ones((3, 3)))
+    if n < 2:
+        return fr
+    sizes = ndi.sum(al, lab, range(1, n + 1))
+    for i, sz in enumerate(sizes):
+        if sz < ratio * sizes.max():
+            fr[lab == i + 1] = 0
+    return trim(fr)
+
+
 def quantize_all(frames, colors=96):
     px = np.concatenate([f[f[..., 3] > 0][:, :3] for f in frames])
     q = Image.fromarray(px.reshape(-1, 1, 3).astype("uint8")).quantize(
@@ -324,13 +339,15 @@ def extract(name):
         px0, py0 = (p, p) if np.isscalar(p) else p
         f = to_native(a, m, gray, b, px0, py0, cfg["span"], cfg["color"], cfg.get("holes"))
         f = fix_green(defringe(f)) if cfg["color"] == "fg" else fix_green(f)
-        frames.append(trim(f))
+        f = trim(f)
+        frames.append(drop_specks(f) if cfg.get("clean") else f)
     return quantize_all(frames)
 
 
 def build(name):
     fr = extract(name)
-    F = lambda r, c: fr[r * 3 + c]
+    cols = SHEETS[name].get("cols", 3)
+    F = lambda r, c: fr[r * cols + c]
     if name == "niece":
         layout = {
             "down": {"frames": [F(0, 0), F(0, 2), mirror(F(0, 2))], "walk": CYCLE, "bob": [0, 0, 0, 0]},
@@ -357,8 +374,24 @@ def build(name):
             "fish": {"frames": [F(4, 0), F(4, 1), F(4, 2)], "walk": [0], "bob": [0]},
         }
         upper, erode = True, True
-    else:   # mama / papa: 立ち姿の1枚だけ
-        layout = {"down": {"frames": [fr[0]], "walk": [0], "bob": [0]}}
+    elif name == "papa":
+        # 行: 下・左・右・上。列: 0=立ち、1〜3=歩き
+        W = [1, 2, 3, 2]
+        layout = {
+            "down": {"frames": [F(0, c) for c in range(4)], "walk": W, "bob": [0, 0, 0, 0]},
+            "left": {"frames": [F(1, c) for c in range(4)], "walk": W, "bob": [0, 0, 0, 0]},
+            "right": {"frames": [F(2, c) for c in range(4)], "walk": W, "bob": [0, 0, 0, 0]},
+            "up": {"frames": [F(3, c) for c in range(4)], "walk": W, "bob": [0, 0, 0, 0]},
+        }
+        upper, erode = True, False
+    else:   # mama: 行: 下・横(右向きが2行)・上。列: 0=立ち、1〜4=歩き
+        W = [1, 2, 3, 4]
+        layout = {
+            "down": {"frames": [F(0, c) for c in range(5)], "walk": W, "bob": [0, 0, 0, 0]},
+            "left": {"frames": [mirror(F(1, c)) for c in range(5)], "walk": W, "bob": [0, 0, 0, 0]},
+            "right": {"frames": [F(2, c) for c in range(5)], "walk": W, "bob": [0, 0, 0, 0]},
+            "up": {"frames": [F(3, c) for c in range(5)], "walk": W, "bob": [0, 0, 0, 0]},
+        }
         upper, erode = True, False
     sx = SCALE[name]
     for d in layout.values():

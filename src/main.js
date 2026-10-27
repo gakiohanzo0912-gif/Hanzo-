@@ -32,10 +32,10 @@
   var world = null, story = null;
   var ready = false, loadError = null;
 
-  Promise.all(KINDS.map(function (k) { return loadImage("assets/sprites/" + k + ".png?v=5"); }))
+  Promise.all(KINDS.map(function (k) { return loadImage("assets/sprites/" + k + ".png?v=6"); }))
     .then(function (imgs) {
       KINDS.forEach(function (k, i) { sprites[k] = imgs[i]; });
-      world = new H.World(H.SCENES, "outside");
+      world = new H.World(H.SCENES, "room2");
       story = new H.Story(world, ui);
       ready = true;
     })
@@ -47,6 +47,7 @@
   }
 
   // ---------------------------------------------------------- 会話ウィンドウ
+  var intro = null;        // はじまりのおはなし(黒い画面)
   var title = { t: 0 };    // タイトル画面(はじめたら null)
   var dlg = null;          // いま出ている会話
   var ending = null;       // 第1章クリアの表示
@@ -111,7 +112,14 @@
   function onAction() {
     started = true;
     if (!ready || fade) return;
-    if (title) { if (title.t > 0.4) { title = null; fade = { a: 1, phase: "in" }; } return; }
+    if (title) { if (title.t > 0.4) { title = null; intro = { i: 0, shown: 0 }; } return; }
+    if (intro) {
+      var len = INTRO[intro.i].replace(/\n/g, "").length;
+      if (intro.shown < len) intro.shown = len;
+      else if (intro.i < INTRO.length - 1) { intro.i++; intro.shown = 0; }
+      else { intro = null; fade = { a: 1, phase: "in" }; }
+      return;
+    }
     if (ending) { if (ending.t > 0.8) ending = null; return; }
     if (dlg) { advanceDialog(); return; }
     var t = world.interactTarget();
@@ -170,7 +178,7 @@
   }
   // 会話中は画面をタップしても進む
   canvas.addEventListener("pointerdown", function (e) {
-    if (title || dlg || ending) { e.preventDefault(); onAction(); }
+    if (title || intro || dlg || ending) { e.preventDefault(); onAction(); }
   });
 
   // ---------------------------------------------------------- 画面サイズに合わせる
@@ -361,6 +369,25 @@
     text("Z / Enter / タップ で スタート", VIEW_W / 2, 500, 14, "center", title.t > 1.2 ? 0.8 : 0);
   }
 
+
+  // ---------------------------------------------------------- はじまりのおはなし
+  var INTRO = [
+    "2026年9月15日　はれ",
+    "きょうは おやすみの ひ。\nあさから ごろごろ してます。",
+    "2かいの へやで、まめしばと\nのんびり していたら…",
+    "したから いいにおいが してきた。\nママが ごはんを つくっているみたい。",
+  ];
+  function drawIntro() {
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    var lines = wrap(INTRO[intro.i], 600, 30), left = Math.floor(intro.shown);
+    for (var i = 0; i < lines.length && left > 0; i++) {
+      plainText(lines[i].slice(0, left), 84, 190 + i * 52, 30);
+      left -= lines[i].length;
+    }
+    if (intro.shown >= INTRO[intro.i].replace(/\n/g, "").length && Math.floor(anim * 2) % 2 === 0) plainText("▼", VIEW_W - 90, VIEW_H - 70, 22);
+  }
+
   function render() {
     ctx.fillStyle = "#14181f";
     ctx.fillRect(0, 0, VIEW_W, VIEW_H);
@@ -368,6 +395,7 @@
     if (!ready) { text("よみこみ中…", VIEW_W / 2, VIEW_H / 2, 24, "center"); return; }
 
     if (title) { drawTitle(); return; }
+    if (intro) { drawIntro(); return; }
     var art = artFor(world.sceneId);
     var p = world.player.pos();
     var camX = Math.round(p.x * TILE + TILE / 2 - VIEW_W / 2);
@@ -441,6 +469,7 @@
     }
   }
 
+  var wasDlg = false;
   var last = performance.now();
   function frame(now) {
     var dt = Math.min(0.1, (now - last) / 1000);
@@ -450,10 +479,13 @@
     if (dlg && dlg.shown < pageLength()) dlg.shown += dt * 38;
     if (ending) ending.t += dt;
     if (title) title.t += dt;
+    if (intro) intro.shown += dt * 14;
     if (ready) {
       if (world.pendingWarp && !fade && !dlg) fade = { a: 0, phase: "out" };
       updateFade(dt);
-      var want = title || dlg || fade || ending ? null : currentDir();
+      if (wasDlg && !dlg) world.npcs.forEach(function (n) { if (n.dir0 && !n.pose) n.dir = n.dir0; });
+      wasDlg = !!dlg;
+      var want = title || intro || dlg || fade || ending ? null : currentDir();
       world.update(dt, want);
     }
     render();

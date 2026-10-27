@@ -23,7 +23,7 @@
   Story.prototype.objective = function () {
     var s = this.s, sc = this.world.sceneId;
     if (s.done) return "第1章 クリア!";
-    if (!s.asked) return sc === "home" ? "ママに はなしかけよう" : "おうちに はいろう";
+    if (!s.asked) return sc === "room2" ? "かいだんで 1かいに おりよう" : sc === "home" ? "ママに はなしかけよう" : "おうちに はいろう";
     if (!s.beer && !s.uncle) return sc === "home" ? "パパにも はなしてみよう" : "パパに はなしを きいてこよう";
     if (!s.uncle) return "みずうみの おじさんに ビールを わたそう";
     if (!s.choco) return "おみせで チョコを かおう";
@@ -72,7 +72,7 @@
         ui.ending();
       });
     } else if (!s.asked) {
-      ui.say("ママ", ["あら、おかえり! ちょうどよかった。", "おみせに いって、チョコを かってきてくれる?", "おかね、" + ALLOWANCE + "えん わたしておくね。"], function () {
+      ui.say("ママ", ["あら、おはよう! いま ごはん つくってるの。", "そうだ、チョコを きらしちゃってた。", "おみせに いって、チョコを かってきてくれる?", "おかね、" + ALLOWANCE + "えん わたしておくね。"], function () {
         s.asked = true;
         s.money = ALLOWANCE;
         ui.say("", ["¥" + ALLOWANCE + " を もらった!", "(パパにも ひとこと いってから いこう)"]);
@@ -87,7 +87,7 @@
   Story.prototype.papa = function () {
     var ui = this.ui, s = this.s;
     if (!s.asked) {
-      ui.say("パパ", ["おかえり。ママが よんでたぞ。"]);
+      ui.say("パパ", ["おお、おはよう。", "いま ほんだなの ほんを さがしてたんだ。", "ママが ごはんを つくってるぞ。はなしかけてみな。"]);
     } else if (!s.beer && !s.uncle) {
       ui.say("パパ", [
         "チョコを かいに いくのか。",

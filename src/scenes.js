@@ -72,7 +72,7 @@
       rows: [
         "WWWWWWWWWWWW",
         "WWWWWWWWWWWW",
-        "WSSfKKKffPfW",
+        "WSSfKKKffPUW",
         "WffffffffffW",
         "WfTTffffffPW",
         "WffffffrrffW",
@@ -81,16 +81,46 @@
       ],
       objects: [],
       spawn: { x: 6, y: 6, dir: "up" },
-      warps: { "6,7": { to: "outside", x: 6, y: 6, dir: "down" } },
+      warps: {
+        "6,7": { to: "outside", x: 6, y: 6, dir: "down" },
+        "10,2": { to: "room2", x: 10, y: 3, dir: "down" },
+      },
       npcs: [
-        { id: "mama", kind: "mama", x: 5, y: 3, dir: "down" },
-        { id: "papa", kind: "papa", x: 8, y: 4, dir: "down" },
+        { id: "mama", kind: "mama", x: 5, y: 3, dir: "up" },      // 台所でごはん作り
+        { id: "papa", kind: "papa", x: 2, y: 3, dir: "up" },      // 本だなをながめている
       ],
       talk: {
         S: ["ほんが ぎっしり ならんでいる。", "『まめしばの そだてかた』…ある。"],
         K: ["だいどころだ。いいにおいが する。"],
         T: ["テーブルの上に おちゃが おいてある。"],
+        U: ["2かいへ のぼる かいだんだ。"],
         P: ["げんきな うえきだ。"],
+      },
+    },
+
+    room2: {
+      id: "room2", kind: "indoor", title: "2かいの へや",
+      theme: { wall: "#d7e6f3", wains: "#6a8fb8", floor: "#d9ab72", trim: "#4a4256" },
+      rows: [
+        "WWWWWWWWWWWW",
+        "WWWWWWWWWWWW",
+        "WLlfSSfDDfNW",
+        "WffffffffffW",
+        "WffffrrffPfW",
+        "WffffrrffffW",
+        "WffffffffffW",
+        "WWWWWWWWWWWW",
+      ],
+      objects: [],
+      spawn: { x: 3, y: 4, dir: "down" },
+      warps: { "10,2": { to: "home", x: 10, y: 3, dir: "down" } },
+      npcs: [],
+      talk: {
+        L: ["ふかふかの ベッド。", "まだ ちょっと ねむい…"],
+        D: ["つくえの上に ノートが ひらいてある。", "『ぼうけんの きろく』と かいてある。"],
+        S: ["えほんが たくさん ならんでいる。"],
+        P: ["まどべの うえきだ。"],
+        N: ["したに おりる かいだんだ。"],
       },
     },
 

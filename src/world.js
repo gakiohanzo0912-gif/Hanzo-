@@ -12,7 +12,7 @@
   var STEP = 1 / 120;            // 内部の時間刻み(秒)。固定刻みにして同期を安定させる
   var SOLID = {
     outdoor: { T: 1, "~": 1, F: 1, R: 1, H: 1, S: 1 },
-    indoor: { W: 1, T: 1, S: 1, K: 1, P: 1, C: 1, B: 1, G: 1 },
+    indoor: { W: 1, T: 1, S: 1, K: 1, P: 1, C: 1, B: 1, G: 1, L: 1, l: 1, D: 1 },
   };
   var DIRS = { down: [0, 1], left: [-1, 0], right: [1, 0], up: [0, -1] };
   var OPPOSITE = { down: "up", up: "down", left: "right", right: "left" };
@@ -53,7 +53,7 @@
     this.scenes = scenes;
     this.npcLists = {};              // シーンごとのNPC(なかまになった人は消える)
     for (var id in scenes) {
-      this.npcLists[id] = scenes[id].npcs.map(function (n) { var c = {}; for (var k in n) c[k] = n[k]; return c; });
+      this.npcLists[id] = scenes[id].npcs.map(function (n) { var c = {}; for (var k in n) c[k] = n[k]; c.dir0 = c.dir; return c; });
     }
     this.followers = [];
     this.acc = 0;
@@ -178,7 +178,9 @@
     var fol = this.followerAt(f.x, f.y);
     if (fol) return { type: "follower", follower: fol };
     var ch = this.tileAt(f.x, f.y);
+    if (this.scene.kind === "indoor" && ch === "l") ch = "L";   // ベッドの右半分
     if (this.scene.talk && this.scene.talk[ch] || (this.scene.kind === "indoor" && "CB".indexOf(ch) >= 0)) {
+
       return { type: "tile", ch: ch, x: f.x, y: f.y };
     }
     return null;

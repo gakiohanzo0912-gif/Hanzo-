@@ -402,6 +402,63 @@
     return p;
   }
 
+  function bedSprite(right) {
+    var p = new Pix(T, T + 8);
+    var x0 = right ? 0 : 2, w = right ? 30 : 30;
+    // 木のわく
+    p.rect(x0, 18, w, 20, "#7a4e2d"); p.rect(x0, 18, w, 2, "#a06a42");
+    // しきぶとん・かけぶとん
+    p.rect(x0 + (right ? 0 : 3), 16, w - 3, 18, "#f2efe6");
+    p.rect(x0 + (right ? 0 : 12), 20, w - (right ? 0 : 12), 16, "#5aa0d8");
+    p.rect(x0 + (right ? 0 : 12), 20, w - (right ? 0 : 12), 2, "#8cc4ee");
+    for (var i = 0; i < 4; i++) p.rect(x0 + (right ? 4 : 16) + i * 6, 26, 3, 3, "#8cc4ee");
+    if (!right) {   // まくら+ヘッドボード
+      p.rect(2, 6, 4, 32, "#6a4226"); p.rect(2, 6, 4, 2, "#a06a42");
+      p.rect(7, 16, 11, 8, "#ffffff"); p.rect(7, 22, 11, 2, "#d9dde8");
+    } else {        // フットボード
+      p.rect(27, 12, 4, 26, "#6a4226"); p.rect(27, 12, 4, 2, "#a06a42");
+    }
+    p.rect(right ? 24 : 4, 36, 4, 4, "#4d321d");
+    p.outline("#2a1b10");
+    return p;
+  }
+  function deskSprite(lamp) {
+    var p = new Pix(T, T + 8);
+    p.rect(0, 14, T, 8, "#b57c46"); p.rect(0, 14, T, 2, "#d9a068");
+    p.rect(0, 22, T, 16, "#8d5a38");
+    p.rect(3, 25, 12, 11, "#a06a42"); p.rect(17, 25, 12, 11, "#a06a42");
+    p.rect(8, 29, 3, 2, "#e6c070"); p.rect(22, 29, 3, 2, "#e6c070");
+    if (lamp) {
+      p.rect(22, 8, 2, 6, "#4a4a55"); p.rect(19, 4, 8, 4, "#f4d35e"); p.rect(18, 12, 10, 2, "#4a4a55");
+      p.rect(4, 11, 10, 4, "#f6f0e0"); p.rect(4, 11, 10, 1, "#8aa0c8");
+    } else {
+      p.rect(6, 10, 3, 5, "#e86a7a"); p.rect(5, 9, 5, 1, "#e86a7a");   // 鉛筆立て
+      p.rect(14, 12, 12, 3, "#4aa070");
+    }
+    p.outline("#3a2415");
+    return p;
+  }
+  function stairsUpTile() {   // 2かいへ(奥にのぼる)
+    var p = new Pix(T, T), i;
+    p.rect(2, 0, T - 4, T, "#8a5a36");
+    for (i = 0; i < 6; i++) {
+      p.rect(2, i * 6, T - 4, 5, i % 2 ? "#a06a42" : "#b57c46");
+      p.rect(2, i * 6 + 5, T - 4, 1, "#4d321d");
+    }
+    p.rect(0, 0, 3, T, "#5a3a22"); p.rect(T - 3, 0, 3, T, "#5a3a22");
+    return p;
+  }
+  function stairsDownTile() { // 1かいへ(した向きにおりる)
+    var p = new Pix(T, T), i;
+    p.rect(2, 0, T - 4, T, "#3a2a22");
+    for (i = 0; i < 6; i++) {
+      p.rect(2, i * 6 + 2, T - 4, 4, i % 2 ? "#7a5030" : "#8d5a38");
+      p.rect(2, i * 6 + 6, T - 4, 2, "#2a1b14");
+    }
+    p.rect(0, 0, 3, T, "#5a3a22"); p.rect(T - 3, 0, 3, T, "#5a3a22");
+    return p;
+  }
+
   function makeIndoorArt(mk, scene) {
     var rows = scene.rows, cols = rows[0].length, nrows = rows.length, theme = scene.theme;
     var ground = mk(cols * TILE, nrows * TILE), gctx = ground.getContext("2d");
@@ -414,7 +471,10 @@
       T: [tableSprite().toCanvas(mk), -16], S: [shelfSprite().toCanvas(mk), -24], K: [kitchenSprite().toCanvas(mk), -16],
       P: [plantSprite().toCanvas(mk), -16], C: [counterSprite(false).toCanvas(mk), -8], B: [counterSprite(true).toCanvas(mk), -8],
       G: [goodsSprite().toCanvas(mk), -24],
+      L: [bedSprite(false).toCanvas(mk), -16], l: [bedSprite(true).toCanvas(mk), -16],
+      D: [deskSprite(true).toCanvas(mk), -16], d: [deskSprite(false).toCanvas(mk), -16],
     };
+    var stairUp = stairsUpTile().toCanvas(mk), stairDown = stairsDownTile().toCanvas(mk);
     var objects = [];
     for (var y = 0; y < nrows; y++) {
       for (var x = 0; x < cols; x++) {
@@ -427,6 +487,9 @@
         gctx.drawImage(floorVariants[(x * 5 + y * 3) % 3], px, py);
         if (ch === "r") gctx.drawImage(rug, px, py);
         else if (ch === "M") gctx.drawImage(mat, px, py);
+        else if (ch === "U") gctx.drawImage(stairUp, px, py);
+        else if (ch === "N") gctx.drawImage(stairDown, px, py);
+        else if (ch === "D" && x % 2 === 1) objects.push({ img: spr.d[0], x: px, y: py + spr.d[1], sortY: py + TILE - 6 });
         else if (spr[ch]) objects.push({ img: spr[ch][0], x: px, y: py + spr[ch][1], sortY: py + TILE - 6 });
       }
     }

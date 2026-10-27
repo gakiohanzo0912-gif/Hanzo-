@@ -38,6 +38,24 @@ out.rows.forEach((r, i) => assert.strictEqual(r.length, 30, "outside row " + i))
   assert.strictEqual(s.rows.length, 8); s.rows.forEach((r) => assert.strictEqual(r.length, 12));
 });
 
+// ---- 2かいの部屋からスタート → かいだんで1かいへ ----
+{
+  const w2 = new H.World(H.SCENES, "room2");
+  assert.strictEqual(w2.sceneId, "room2");
+  assert.deepStrictEqual([w2.player.tx, w2.player.ty], [3, 4]);
+  assert.strictEqual(w2.followers[0].kind, "dog");
+  route(w2, [["up", 1], ["right", 7]]);     // (3,4)->(3,3)->(10,3)
+  assert.deepStrictEqual([w2.player.tx, w2.player.ty], [10, 3]);
+  walk(w2, "up", 1);
+  assert.ok(w2.pendingWarp && w2.pendingWarp.to === "home", "stairs down");
+  w2.enter("home", w2.pendingWarp.x, w2.pendingWarp.y, w2.pendingWarp.dir);
+  assert.deepStrictEqual([w2.player.tx, w2.player.ty], [10, 3]);
+  const mm = w2.npcs.find((n) => n.id === "mama");
+  assert.strictEqual(mm.dir, "up");
+  walk(w2, "up", 1);
+  assert.ok(w2.pendingWarp && w2.pendingWarp.to === "room2", "stairs up");
+}
+
 // ---- ドアから家に入って、出る ----
 let w = mkWorld();
 assert.strictEqual(w.sceneId, "outside");
@@ -73,17 +91,16 @@ w.enter("home", 6, 6, "up");
 route(w, [["up", 3]]); face(w, "left");
 story.interact(w.interactTarget());
 assert.ok(story.s.asked && story.s.money === 500);
-// パパ(8,4)に話す → ビール
-route(w, [["right", 1], ["down", 0]]);       // (7,3)
-route(w, [["down", 1]]);                     // (7,4)
-face(w, "right");
+// パパ(2,3)に話す → ビール
+route(w, [["down", 1], ["left", 2], ["up", 1], ["left", 1]]);   // (6,3)->(6,4)->(4,4)->(4,3)->(3,3)
+face(w, "left");
 let pt = w.interactTarget();
 assert.ok(pt && pt.npc.id === "papa", "papa in front");
 story.interact(pt);
 assert.ok(story.s.beer);
 assert.ok(/ビール/.test(story.items().join()));
 // 外へ
-route(w, [["down", 2], ["left", 1], ["down", 1]]);   // (7,4)->(7,6)->(6,6)->(6,7)
+route(w, [["right", 1], ["down", 3], ["right", 2], ["down", 1]]);   // (3,3)->(4,3)->(4,6)->(6,6)->(6,7)
 assert.ok(w.pendingWarp, "exit warp");
 w.enter("outside", w.pendingWarp.x, w.pendingWarp.y, w.pendingWarp.dir);
 
