@@ -11,18 +11,22 @@
   <div id="wrap">
     <h1 id="head">姪っ子と豆柴の冒険</h1>
     <canvas id="game" width="768" height="512" aria-label="ゲーム画面"></canvas>
-    <div id="pad" aria-label="操作ボタン">
-      <button type="button" data-dir="up" aria-label="上">▲</button>
-      <button type="button" data-dir="left" aria-label="左">◀</button>
-      <button type="button" data-dir="down" aria-label="下">▼</button>
-      <button type="button" data-dir="right" aria-label="右">▶</button>
+    <div id="controls">
+      <div id="pad" aria-label="操作ボタン">
+        <button type="button" data-dir="up" aria-label="上">▲</button>
+        <button type="button" data-dir="left" aria-label="左">◀</button>
+        <button type="button" data-dir="down" aria-label="下">▼</button>
+        <button type="button" data-dir="right" aria-label="右">▶</button>
+      </div>
+      <button type="button" id="abtn" aria-label="はなす・しらべる">A</button>
     </div>
-    <p id="foot">矢印キー / WASD で移動 ・ G キーでマス目の表示</p>
+    <p id="foot">矢印キー / WASD で移動 ・ Z / Enter / スペースで はなす・しらべる ・ G キーでマス目の表示</p>
   </div>
 
   <script src="assets/sprites/sprites.js"></script>
-  <script src="src/map.js"></script>
+  <script src="src/scenes.js"></script>
   <script src="src/world.js"></script>
+  <script src="src/story.js"></script>
   <script src="src/art.js"></script>
   <script src="src/main.js"></script>
 </body>

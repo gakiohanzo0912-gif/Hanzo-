@@ -231,8 +231,212 @@
     return p;
   }
 
+
+  // ---- お店(5×3マス。入り口は3マス目、ひさしと看板つき) ----
+  function shopSprite() {
+    var w = T * 5, h = T * 3, p = new Pix(w, h), i, x, y;
+    // 壁
+    p.rect(8, 40, w - 16, h - 40, "#d9efe3");
+    p.rect(8, h - 8, w - 16, 8, "#8fb8a3");
+    for (x = 8; x < w - 8; x += 40) p.rect(x, 40, 2, h - 48, "#bcdccb");
+    // 屋根(青緑)
+    for (y = 6; y < 42; y++) {
+      var inset = Math.floor((42 - y) * 0.7);
+      p.rect(2 + inset, y, w - 4 - inset * 2, 1, ((y / 6) | 0) % 2 ? "#2f7f8f" : "#3a93a4");
+    }
+    p.rect(4, 38, w - 8, 4, "#22616e");
+    // 看板(チョコレートの絵)
+    p.rect(52, 10, 56, 20, "#6b4529");
+    p.rect(54, 12, 52, 16, "#f3e3bd");
+    p.rect(62, 15, 36, 10, "#5a3320");
+    for (x = 62; x < 98; x += 9) p.rect(x, 15, 1, 10, "#7a4a30");
+    p.rect(62, 19, 36, 1, "#7a4a30");
+    p.rect(64, 16, 3, 2, "#8d5a3d");
+    // ウィンドウ(商品がならぶ)
+    var wins = [20, 112];
+    for (i = 0; i < wins.length; i++) {
+      var wx = wins[i];
+      p.rect(wx, 52, 28, 28, "#6b4529");
+      p.rect(wx + 2, 54, 24, 24, "#a8dcf0");
+      p.rect(wx + 2, 70, 24, 8, "#c79a62");
+      var cols = ["#e86a7a", "#f4d35e", "#7b5cc8", "#5aa8e0"];
+      for (x = 0; x < 4; x++) { p.rect(wx + 4 + x * 6, 64, 4, 6, cols[x]); p.rect(wx + 4 + x * 6, 64, 4, 1, "#ffffff"); }
+      p.rect(wx + 3, 55, 6, 3, "#d7f0fa");
+    }
+    // ひさし(赤と白のしま)
+    for (x = 58; x < 102; x += 8) {
+      p.rect(x, 52, 4, 8, "#d94a4a"); p.rect(x + 4, 52, 4, 8, "#fff3e0");
+    }
+    p.rect(58, 60, 44, 2, "#a53030");
+    // ドア
+    p.rect(66, 64, 28, 32, "#5a3720");
+    p.rect(68, 66, 24, 30, "#7b4a2b");
+    p.rect(71, 69, 18, 11, "#a8dcf0");
+    p.rect(79, 69, 2, 11, "#5a3720");
+    p.rect(86, 84, 3, 3, "#f0c040");
+    p.rect(62, 92, 36, 4, "#bdb7a6"); p.rect(62, 92, 36, 1, "#d6d1c2");
+    p.outline("#2a3b3d");
+    return p;
+  }
+
+  // ---- 家の中・お店の中 ----
+  function floorTile(r, theme) {
+    var p = new Pix(T, T), i, base = theme.floor;
+    p.rect(0, 0, T, T, base);
+    for (i = 0; i < 4; i++) {
+      p.rect(0, i * 8 + 7, T, 1, "#a7794a");
+      p.rect(0, i * 8, T, 1, "#e0b97e");
+      var off = ((r() * 24) | 0) + 4;
+      p.rect(off, i * 8 + 1, 1, 6, "#b88a58");
+    }
+    return p;
+  }
+  function wallTrimTile(theme) {   // 外周のかべ(暗い木)
+    var p = new Pix(T, T);
+    p.rect(0, 0, T, T, theme.trim);
+    p.rect(0, 0, T, 2, "#7c6450");
+    for (var x = 0; x < T; x += 8) p.rect(x, 2, 1, T - 2, "#4b3a2d");
+    return p;
+  }
+  function wallFaceTile(theme) {   // 奥のかべ(かべ紙+腰板)
+    var p = new Pix(T, T);
+    p.rect(0, 0, T, T, theme.wall);
+    for (var x = 0; x < T; x += 8) p.rect(x, 0, 1, 18, "#dccaa0");
+    p.rect(0, 18, T, 2, "#f6ecd2");
+    p.rect(0, 20, T, T - 20, theme.wains);
+    for (x = 0; x < T; x += 10) p.rect(x, 22, 1, T - 22, "#8a5e38");
+    p.rect(0, T - 2, T, 2, "#5a3e24");
+    return p;
+  }
+  function rugTile() {
+    var p = new Pix(T, T);
+    p.rect(0, 0, T, T, "#b8453f");
+    p.rect(2, 2, T - 4, T - 4, "#d86a5a");
+    p.rect(6, 6, T - 12, T - 12, "#b8453f");
+    p.rect(9, 9, T - 18, T - 18, "#f1d58a");
+    return p;
+  }
+  function matTile() {
+    var p = new Pix(T, T);
+    p.rect(4, 8, T - 8, T - 12, "#5e4a3b");
+    for (var x = 6; x < T - 6; x += 4) p.rect(x, 10, 2, T - 16, "#7a6350");
+    p.outline("#3b2d22");
+    return p;
+  }
+  function tableSprite() {
+    var p = new Pix(T, T + 8);
+    p.rect(5, 30, 3, 10, "#6d4526"); p.rect(24, 30, 3, 10, "#6d4526");
+    p.ellipse(16, 24, 14, 8, "#7d5230");
+    p.ellipse(16, 22, 14, 8, "#a4713f");
+    p.ellipse(16, 21, 11, 5, "#c28850");
+    p.rect(13, 14, 7, 5, "#f4efe3"); p.rect(20, 15, 3, 1, "#f4efe3"); p.rect(14, 12, 5, 2, "#e86a7a");
+    p.outline("#3a271a");
+    return p;
+  }
+  function shelfSprite() {
+    var p = new Pix(T, T + 12), i, cols = ["#c04a4a", "#4a7ac0", "#d9a93a", "#4aa070", "#8b5cc0", "#e07a3c"];
+    p.rect(1, 0, 30, 44, "#7a4e2d");
+    p.rect(3, 2, 26, 40, "#4d321d");
+    for (var row = 0; row < 3; row++) {
+      var y = 4 + row * 13;
+      p.rect(3, y + 11, 26, 2, "#8d5a38");
+      var x = 4;
+      for (i = 0; i < 7; i++) {
+        var bw = 2 + ((i * 3 + row) % 3), bh = 8 - ((i + row) % 3);
+        p.rect(x, y + 11 - bh, bw, bh, cols[(i + row * 2) % cols.length]);
+        x += bw + 1;
+        if (x > 26) break;
+      }
+    }
+    p.outline("#2a1b10");
+    return p;
+  }
+  function kitchenSprite() {
+    var p = new Pix(T, T + 8);
+    p.rect(1, 6, 30, 38, "#d8d6d0");
+    p.rect(1, 6, 30, 3, "#f1efe9");
+    p.rect(1, 22, 30, 3, "#9a988f");
+    p.rect(3, 26, 12, 16, "#c9c7bf"); p.rect(17, 26, 12, 16, "#c9c7bf");
+    p.rect(13, 32, 2, 4, "#6b6a64"); p.rect(17, 32, 2, 4, "#6b6a64");
+    p.ellipse(9, 15, 5, 3, "#4a4a4f"); p.ellipse(23, 15, 5, 3, "#4a4a4f");
+    p.rect(5, 8, 8, 6, "#8a8f98"); p.rect(5, 7, 8, 1, "#b7bcc4");
+    p.rect(19, 10, 8, 3, "#c0402f");
+    p.outline("#2a2a2e");
+    return p;
+  }
+  function plantSprite() {
+    var p = new Pix(T, T + 8);
+    p.rect(9, 26, 14, 12, "#b5653a"); p.rect(8, 24, 16, 3, "#cc7a48"); p.rect(9, 36, 14, 2, "#8a4a28");
+    p.ellipse(10, 16, 6, 9, "#2f8a46"); p.ellipse(22, 16, 6, 9, "#2f8a46"); p.ellipse(16, 10, 6, 10, "#3fa65a");
+    p.ellipse(14, 8, 2, 4, "#6cc880");
+    p.outline("#1c3d29");
+    return p;
+  }
+  function counterSprite(bell) {
+    var p = new Pix(T, T + 4);
+    p.rect(0, 12, T, 8, "#c8956a"); p.rect(0, 12, T, 2, "#e6bb8b");
+    p.rect(0, 20, T, 22, "#8d5a38");
+    p.rect(2, 24, T - 4, 14, "#a06a42"); p.rect(2, 24, T - 4, 1, "#c08a5a");
+    p.rect(0, 40, T, 2, "#5a3a22");
+    if (bell) {
+      p.ellipse(16, 10, 5, 4, "#f0c040"); p.rect(11, 12, 10, 2, "#c49a20"); p.rect(15, 5, 2, 2, "#8a6a10");
+      p.rect(22, 8, 6, 4, "#f4efe3");
+    }
+    p.outline("#3a2415");
+    return p;
+  }
+  function goodsSprite() {
+    var p = new Pix(T, T + 12), i;
+    p.rect(1, 0, 30, 44, "#6b4529");
+    p.rect(3, 2, 26, 40, "#3f2a1a");
+    var cols = ["#e86a7a", "#f4d35e", "#5aa8e0", "#7b5cc8", "#7a4a30", "#4aa070"];
+    for (var row = 0; row < 3; row++) {
+      var y = 4 + row * 13;
+      p.rect(3, y + 11, 26, 2, "#8d5a38");
+      for (i = 0; i < 5; i++) {
+        var c = cols[(i + row * 2) % cols.length];
+        p.rect(4 + i * 5, y + 4, 4, 7, c); p.rect(4 + i * 5, y + 4, 4, 1, "#ffffff");
+      }
+    }
+    p.outline("#2a1b10");
+    return p;
+  }
+
+  function makeIndoorArt(mk, scene) {
+    var rows = scene.rows, cols = rows[0].length, nrows = rows.length, theme = scene.theme;
+    var ground = mk(cols * TILE, nrows * TILE), gctx = ground.getContext("2d");
+    var seed = 77 + scene.id.length * 1000;
+    var floorVariants = [];
+    for (var v = 0; v < 3; v++) floorVariants.push(floorTile(rng(seed + v), theme).toCanvas(mk));
+    var trim = wallTrimTile(theme).toCanvas(mk), face = wallFaceTile(theme).toCanvas(mk);
+    var rug = rugTile().toCanvas(mk), mat = matTile().toCanvas(mk);
+    var spr = {
+      T: [tableSprite().toCanvas(mk), -16], S: [shelfSprite().toCanvas(mk), -24], K: [kitchenSprite().toCanvas(mk), -16],
+      P: [plantSprite().toCanvas(mk), -16], C: [counterSprite(false).toCanvas(mk), -8], B: [counterSprite(true).toCanvas(mk), -8],
+      G: [goodsSprite().toCanvas(mk), -24],
+    };
+    var objects = [];
+    for (var y = 0; y < nrows; y++) {
+      for (var x = 0; x < cols; x++) {
+        var ch = rows[y].charAt(x), px = x * TILE, py = y * TILE;
+        if (ch === "W") {
+          gctx.drawImage(y === 1 && x > 0 && x < cols - 1 ? face : trim, px, py);
+          if (y === 0) gctx.drawImage(trim, px, py);
+          continue;
+        }
+        gctx.drawImage(floorVariants[(x * 5 + y * 3) % 3], px, py);
+        if (ch === "r") gctx.drawImage(rug, px, py);
+        else if (ch === "M") gctx.drawImage(mat, px, py);
+        else if (spr[ch]) objects.push({ img: spr[ch][0], x: px, y: py + spr[ch][1], sortY: py + TILE - 6 });
+      }
+    }
+    // 奥のかべの前にある家具(本だな・台所など)は、かべの上に立つので、かべの顔を足もとまでのばす
+    return { ground: [ground, ground], objects: objects.sort(function (a, b) { return a.sortY - b.sortY; }), width: cols * TILE, height: nrows * TILE };
+  }
+
   // ---- まとめ ----
   function makeArt(mk, map) {
+    if (map.kind === "indoor") return makeIndoorArt(mk, map);
     var cols = map.rows[0].length, rows = map.rows.length;
     var tileAt = function (x, y) {
       if (x < 0 || y < 0 || x >= cols || y >= rows) return "T";
@@ -252,7 +456,7 @@
         if (ch === "=") {
           var np = { up: isPath(x, y - 1), down: isPath(x, y + 1), left: isPath(x - 1, y), right: isPath(x + 1, y) };
           // 家の入り口に続く道は、上をふさがない
-          if (tileAt(x, y - 1) === "D") np.up = true;
+          if (tileAt(x, y - 1) === "D" || tileAt(x, y - 1) === "E") np.up = true;
           frames[0] = frames[1] = pathTile(r, np).toCanvas(mk);
         } else if (ch === "~" || ch === "B") {
           var nw = { up: isWater(x, y - 1), down: isWater(x, y + 1), left: isWater(x - 1, y), right: isWater(x + 1, y) };
@@ -291,9 +495,10 @@
         }
       }
     }
-    var house = houseSprite().toCanvas(mk);
+    var house = houseSprite().toCanvas(mk), shop = shopSprite().toCanvas(mk);
     map.objects.forEach(function (o) {
-      if (o.type === "house") objects.push({ img: house, x: o.x * TILE, y: o.y * TILE, sortY: (o.y + o.h) * TILE - 4 });
+      var img = o.type === "shop" ? shop : house;
+      objects.push({ img: img, x: o.x * TILE, y: o.y * TILE, sortY: (o.y + o.h) * TILE - 4 });
     });
     objects.sort(function (a, b) { return a.sortY - b.sortY; });
     return { ground: ground, objects: objects, width: cols * TILE, height: rows * TILE };
