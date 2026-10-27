@@ -207,6 +207,7 @@
         p.tx = p.nx; p.ty = p.ny; p.moving = false; p.t = 0; p.steps++;
         var warp = this.scene.warps && this.scene.warps[p.tx + "," + p.ty];
         if (warp) this.pendingWarp = warp;
+        else if (this.onStep) this.onStep(this.sceneId, p.tx, p.ty, this.tileAt(p.tx, p.ty));   // 1マス歩くたびに(てきとの遭遇など)
       }
     }
     if (!p.moving && want && !this.pendingWarp) {

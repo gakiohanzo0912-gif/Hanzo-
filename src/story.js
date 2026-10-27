@@ -4,6 +4,7 @@
 //   ui.say(who, lines, done)               … せりふを順に出す。おわったら done()
 //   ui.ask(who, text, options, done(i))    … えらぶ。選んだ番号で done(i)
 //   ui.ending()                            … 第1章クリアの表示
+//   ui.battle(spec, done(res))             … せんとう画面(res = { result, party, money })
 //
 // ここを書き換えれば、せりふやおつかいの中身を変えられる。
 (function (g) {
@@ -16,8 +17,76 @@
   function Story(world, ui) {
     this.world = world;
     this.ui = ui;
-    this.s = { asked: false, beer: false, uncle: false, choco: false, done: false, money: 0 };
+    this.s = { asked: false, beer: false, uncle: false, choco: false, done: false, money: 0, shizuyoLost: 0 };
+    // なかまの HP・MP(せんとうでへる。おうちに入ると全回復)
+    this.party = {};
+    for (var id in H.MEMBERS) this.party[id] = { hp: H.MEMBERS[id].hp, mp: H.MEMBERS[id].mp };
+    this.stepCount = 0;
+    this.fighting = false;
+    this.rng = Math.random;
   }
+
+  // いま いっしょにいる人たち(せんとうに出る人)
+  Story.prototype.partyIds = function () {
+    var ids = ["niece"];
+    this.world.followers.forEach(function (f) { if (H.MEMBERS[f.kind]) ids.push(f.kind); });
+    return ids;
+  };
+
+  Story.prototype.healAll = function () {
+    for (var id in this.party) { this.party[id].hp = H.MEMBERS[id].hp; this.party[id].mp = H.MEMBERS[id].mp; }
+  };
+
+  // ばしょが かわったとき
+  Story.prototype.onEnter = function (sceneId) {
+    if (sceneId === "home") this.healAll();     // おうちで ひとやすみ
+  };
+
+  // せんとうをはじめる。spec: { boss: bool, enemies: ["bat", ...], intro: "…があらわれた!" }。おわったら done(result)
+  Story.prototype.battle = function (spec, done) {
+    var self = this, ids = this.partyIds();
+    this.fighting = true;
+    var members = ids.map(function (id) { return { id: id, hp: self.party[id].hp, maxhp: H.MEMBERS[id].hp, mp: self.party[id].mp, maxmp: H.MEMBERS[id].mp }; });
+    this.ui.battle({ boss: !!spec.boss, enemies: spec.enemies, intro: spec.intro, members: members, rng: this.rng }, function (res) {
+      self.fighting = false;
+      res.party.forEach(function (p) { self.party[p.id].hp = p.hp; self.party[p.id].mp = p.mp; });
+      if (res.result === "win" && !spec.boss) {
+        self.s.money += res.money;
+        // かった あとは、すこしだけ げんきが もどる
+        ids.forEach(function (id) {
+          var p = self.party[id], m = H.MEMBERS[id];
+          if (p.hp > 0) p.hp = Math.min(m.hp, p.hp + Math.ceil(m.hp * 0.25));
+          p.mp = Math.min(m.mp, p.mp + 2);
+        });
+      }
+      // たおれたなかまは、HP 1 で おきあがる
+      if (res.result !== "lose") ids.forEach(function (id) { if (self.party[id].hp <= 0) self.party[id].hp = 1; });
+      done(res.result);
+    });
+  };
+
+  // 1マス歩いたあと(うちの そとの くさむらで、てきに であう)
+  Story.prototype.onStep = function (sceneId, x, y, ch) {
+    var s = this.s, self = this;
+    if (sceneId !== "outside" || !s.asked || this.fighting) return;
+    if (ch !== "." && ch !== ",") return;
+    this.stepCount++;
+    if (this.stepCount < 6 || this.rng() > 0.13) return;
+    this.stepCount = 0;
+    var kinds = H.randomGroup(this.rng);
+    this.battle({ boss: false, enemies: kinds }, function (result) {
+      if (result === "lose") self.knockedOut();
+    });
+  };
+
+  // ぜんめつ → おうちの まえで めがさめる
+  Story.prototype.knockedOut = function () {
+    var self = this;
+    this.ui.say("", ["めのまえが まっくらに なった…", "…きがつくと、おうちの なかに いた。", "ママが しんぱいそうに のぞきこんでいる。"], function () {
+      self.healAll();
+      self.world.pendingWarp = { to: "home", x: 6, y: 6, dir: "up" };
+    });
+  };
 
   // いまの目的(画面の上に出す)
   Story.prototype.objective = function () {
@@ -124,15 +193,32 @@
   };
 
   Story.prototype.shop = function () {
-    var ui = this.ui, s = this.s;
-    if (s.choco) { ui.say("おみせの ひと", ["まいどあり!"]); return; }
+    var ui = this.ui, s = this.s, self = this;
+    if (s.choco) { ui.say("しずよ", ["…まいど あり。", "(まだ ちょっと ふてくされている)"]); return; }
     if (!s.asked) { ui.say("おみせの ひと", ["いらっしゃいませ!", "(いまは かうものが ない)"]); return; }
     ui.ask("おみせの ひと", "いらっしゃい! チョコレートは " + PRICE + "えん だよ。", ["かう", "やめる"], function (i) {
       if (i !== 0) { ui.say("おみせの ひと", ["また きてね!"]); return; }
       if (s.money < PRICE) { ui.say("おみせの ひと", ["おかねが たりないみたい…"]); return; }
-      s.money -= PRICE;
-      s.choco = true;
-      ui.say("", ["チョコレートを てにいれた!", "(ママの ところへ もっていこう)"]);
+      var first = !s.shizuyoLost;
+      var lines = first
+        ? ["ヒッヒッヒ…ひさしぶりの おきゃくさんだねぇ。", "あたしゃ まじょの しずよ! この おみせの ぬしさ!", "チョコが ほしけりゃ、あたしを たおしてからに おし!"]
+        : ["ヒッヒッヒ…また きたのかい。", "いいだろう、もういちど あいてを してやろう!"];
+      ui.say("しずよ", lines, function () {
+        self.battle({ boss: true, enemies: ["shizuyo"], intro: "まじょの しずよが あらわれた!" }, function (result) {
+          if (result === "win") {
+            ui.say("しずよ", ["ぐぬぬ…まけたよ。やるじゃないか。", "ほら、チョコレートを もっておいき。", "おかねは いらないよ。…こんかいだけだからね!"], function () {
+              s.choco = true;
+              ui.say("", ["チョコレートを てにいれた!", "(ママの ところへ もっていこう)"]);
+            });
+          } else {
+            s.shizuyoLost++;
+            self.healAll();
+            ui.say("しずよ", ["ヒッヒッヒ…まだまだ ひよっこだね。", "ゆっくり やすんで、また おいで!"], function () {
+              ui.say("", ["なかまの げんきが かいふくした!"]);
+            });
+          }
+        });
+      });
     });
   };
 

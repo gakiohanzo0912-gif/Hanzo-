@@ -2,6 +2,7 @@
 const assert = require("assert");
 const H = require("../src/world.js");
 require("../src/scenes.js");
+require("../src/battle.js");
 require("../src/story.js");
 
 function mkWorld() { return new H.World(H.SCENES, "outside"); }
@@ -24,6 +25,7 @@ function mkUI(log, answers) {
     say(who, lines, cb) { log.push(who + ":" + lines.join("/")); if (cb) cb(); },
     ask(who, text, opts, cb) { log.push(who + "?" + text); cb(answers.length ? answers.shift() : 0); },
     ending() { log.push("ENDING"); },
+    battle(spec, cb) { log.push("BATTLE:" + spec.enemies.join(",")); cb({ result: "win", money: 0, party: spec.members }); },
   };
   return ui;
 }
@@ -135,7 +137,8 @@ face(w, "up");
 const ct = w.interactTarget();
 assert.ok(ct && ct.type === "tile" && "CB".includes(ct.ch), "counter " + JSON.stringify(ct));
 story.interact(ct);
-assert.ok(story.s.choco && story.s.money === 500 - H.STORY_PRICE);
+assert.ok(story.s.choco && story.s.money === 500, "しずよに かてば チョコは むりょう");
+assert.ok(log.some((l) => l === "BATTLE:shizuyo"), "boss battle at the counter");
 
 // ---- ママにチョコを渡して第1章クリア ----
 w.enter("home", 6, 6, "up");
