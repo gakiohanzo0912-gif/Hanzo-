@@ -47,6 +47,7 @@
   }
 
   // ---------------------------------------------------------- 会話ウィンドウ
+  var title = { t: 0 };    // タイトル画面(はじめたら null)
   var dlg = null;          // いま出ている会話
   var ending = null;       // 第1章クリアの表示
   var fade = null;         // 場面転換の暗転
@@ -110,6 +111,7 @@
   function onAction() {
     started = true;
     if (!ready || fade) return;
+    if (title) { if (title.t > 0.4) { title = null; fade = { a: 1, phase: "in" }; } return; }
     if (ending) { if (ending.t > 0.8) ending = null; return; }
     if (dlg) { advanceDialog(); return; }
     var t = world.interactTarget();
@@ -168,7 +170,7 @@
   }
   // 会話中は画面をタップしても進む
   canvas.addEventListener("pointerdown", function (e) {
-    if (dlg || ending) { e.preventDefault(); onAction(); }
+    if (title || dlg || ending) { e.preventDefault(); onAction(); }
   });
 
   // ---------------------------------------------------------- 画面サイズに合わせる
@@ -295,12 +297,77 @@
     }
   }
 
+
+  // ---------------------------------------------------------- タイトル画面
+  var STARS = [];
+  (function () {
+    function r(n) { var v = Math.sin(n * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); }
+    for (var i = 0; i < 70; i++) {
+      STARS.push({ x: Math.floor(r(i) * VIEW_W), y: Math.floor(r(i + 100) * 300), p: r(i + 200) * 6.28, big: i % 9 === 0 });
+    }
+  })();
+
+  function logoText(str, cx, cy, size) {
+    ctx.font = "900 " + size + "px Georgia,'Times New Roman','Hiragino Mincho ProN',serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineJoin = "round";
+    // ふち(濃い赤→黒)
+    ctx.lineWidth = 16; ctx.strokeStyle = "#1a0505"; ctx.strokeText(str, cx, cy + 5);
+    ctx.lineWidth = 10; ctx.strokeStyle = "#8a1010"; ctx.strokeText(str, cx, cy + 3);
+    // 金色のグラデーション
+    var g = ctx.createLinearGradient ? ctx.createLinearGradient(0, cy - size / 2, 0, cy + size / 2) : null;
+    if (g) { g.addColorStop(0, "#fff7c2"); g.addColorStop(0.45, "#ffd23a"); g.addColorStop(0.55, "#e89a10"); g.addColorStop(1, "#ffe27a"); }
+    ctx.fillStyle = g || "#ffd23a";
+    ctx.fillText(str, cx, cy);
+    ctx.lineWidth = 2; ctx.strokeStyle = "#fff7d8"; ctx.strokeText(str, cx, cy - 1);
+  }
+
+  function drawTitle() {
+    var sky = ctx.createLinearGradient ? ctx.createLinearGradient(0, 0, 0, VIEW_H) : null;
+    if (sky) { sky.addColorStop(0, "#050a2a"); sky.addColorStop(0.6, "#16307a"); sky.addColorStop(1, "#3a5ca8"); }
+    ctx.fillStyle = sky || "#16307a";
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    for (var i = 0; i < STARS.length; i++) {
+      var st = STARS[i], tw = 0.5 + 0.5 * Math.sin(anim * 2 + st.p);
+      ctx.fillStyle = "rgba(255,255,230," + (0.35 + 0.65 * tw) + ")";
+      ctx.fillRect(st.x, st.y, st.big ? 4 : 2, st.big ? 4 : 2);
+      if (st.big && tw > 0.6) { ctx.fillRect(st.x - 3, st.y + 1, 10, 2); ctx.fillRect(st.x + 1, st.y - 3, 2, 10); }
+    }
+    // 丘(草)
+    ctx.fillStyle = "#1f5a2c";
+    ctx.beginPath(); ctx.ellipse(220, 560, 560, 190, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#2c7a3c";
+    ctx.beginPath(); ctx.ellipse(600, 600, 520, 190, 0, 0, Math.PI * 2); ctx.fill();
+    // ロゴ
+    var drop = Math.min(1, title.t / 0.8), ease = 1 - Math.pow(1 - drop, 3);
+    ctx.globalAlpha = ease;
+    logoText("SUGIURA", VIEW_W / 2, 120 - (1 - ease) * 40, 96);
+    logoText("QUEST", VIEW_W / 2, 215 - (1 - ease) * 40, 96);
+    ctx.globalAlpha = 1;
+    var sub = Math.max(0, Math.min(1, title.t - 0.8));
+    text("〜 姪っ子と豆柴の冒険 〜", VIEW_W / 2, 290, 24, "center", sub);
+    // 主人公たち
+    var nm = window.SPRITE_META.niece, dm = window.SPRITE_META.dog;
+    var bob = Math.floor(anim * 2) % 2;
+    ctx.drawImage(sprites.niece, 0, nm.dirs.right.row * nm.cellH, nm.cellW, nm.cellH, VIEW_W / 2 - 74 - nm.anchorX, 476 - nm.anchorY, nm.cellW, nm.cellH);
+    ctx.drawImage(sprites.dog, 0, dm.dirs.right.row * dm.cellH, dm.cellW, dm.cellH, VIEW_W / 2 + 6 - dm.anchorX, 476 - dm.anchorY - bob * 2, dm.cellW, dm.cellH);
+    if (title.t > 1.2) {
+      windowBox(VIEW_W / 2 - 150, 322, 300, 56);
+      plainText("▶ ぼうけんを はじめる", VIEW_W / 2 - 126, 350, 24, Math.floor(anim * 2) % 2 ? "#fff" : "#ffe58a");
+    }
+    ctx.textAlign = "center";
+    plainText("", 0, 0, 1);
+    text("Z / Enter / タップ で スタート", VIEW_W / 2, 500, 14, "center", title.t > 1.2 ? 0.8 : 0);
+  }
+
   function render() {
     ctx.fillStyle = "#14181f";
     ctx.fillRect(0, 0, VIEW_W, VIEW_H);
     if (loadError) { text("よみこみに失敗しました", VIEW_W / 2, VIEW_H / 2 - 12, 24, "center"); text(String(loadError.message), VIEW_W / 2, VIEW_H / 2 + 20, 14, "center"); return; }
     if (!ready) { text("よみこみ中…", VIEW_W / 2, VIEW_H / 2, 24, "center"); return; }
 
+    if (title) { drawTitle(); return; }
     var art = artFor(world.sceneId);
     var p = world.player.pos();
     var camX = Math.round(p.x * TILE + TILE / 2 - VIEW_W / 2);
@@ -382,10 +449,11 @@
     if (started) clock += dt; else clock = 0;
     if (dlg && dlg.shown < pageLength()) dlg.shown += dt * 38;
     if (ending) ending.t += dt;
+    if (title) title.t += dt;
     if (ready) {
       if (world.pendingWarp && !fade && !dlg) fade = { a: 0, phase: "out" };
       updateFade(dt);
-      var want = dlg || fade || ending ? null : currentDir();
+      var want = title || dlg || fade || ending ? null : currentDir();
       world.update(dt, want);
     }
     render();
